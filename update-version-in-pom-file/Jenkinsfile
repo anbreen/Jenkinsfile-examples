@@ -1,0 +1,55 @@
+#!groovy
+import java.util.regex.*
+
+//in this example the version are only updated locally in the repository
+//if you also want to commit your changes in the git repository then have a look in the other folder for git examples in Jenkinsfile
+
+node {
+    stage('Checkout Repository + Branch'){
+        //This will checkout the repository in which the Jenkinsfile is checked in
+        checkout scm
+        // the variable env.BRANCH_NAME contains the checked-out branch
+        echo "This job will build the branch " + env.BRANCH_NAME
+    }
+
+    stage('Update version in pom file'){
+        def updatedVersion = "10.0.0-SNAPSHOT"
+        //This will read the pomfile in the form of maven model
+        def currentPom = readMavenPom file: 'update-pom-file/pom.xml'
+        //This will print the value of the version defined in the pomfile
+        echo "The current version in the pomfile is " + currentPom.version
+        //change the value of version defined in pom.xml
+        currentPom.version = updatedVersion
+        writeMavenPom model: currentPom
+        //This will print the value of the version that was updated in the pomfile
+        echo "The current version in the pom file is " + currentPom.version
+    }
+
+    stage('Update a dependency version in pom file'){
+        def updatedVersion = "10.0.0-SNAPSHOT"
+        //This will read the pomfile in the form of maven model
+        def currentPom = readMavenPom file: 'update-pom-file/pom.xml'
+        //This will print the value of the version defined in the pomfile
+        //here "0" is the index of the dependency
+        echo "The current version in the pomfile is " + currentPom.getDependencies().get(0).getVersion();
+        //change the value of version defined in pom.xml
+        currentPom.getDependencies().get(0).setVersion(updatedVersion)
+        writeMavenPom model: currentPom
+        //This will print the value of the version that was updated in the pomfile
+        echo "The current version in the pom file is " + currentPom.getDependencies().get(0).getVersion();
+    }
+
+    stage('Update a dependency version in pom file in dependency management'){
+        def updatedVersion = "10.0.0-SNAPSHOT"
+        //This will read the pomfile in the form of maven model
+        def currentPom = readMavenPom file: 'update-pom-file/pom.xml'
+        //This will print the value of the version defined in the pomfile
+        //here "0" is the index of the dependency
+        echo "The current version in the pomfile is " + currentPom.getDependencyManagement().getDependencies().get(0).getVersion();
+        //change the value of version defined in pom.xml
+        currentPom.getDependencyManagement().getDependencies().get(0).setVersion(updatedVersion)
+        writeMavenPom model: currentPom
+        //This will print the value of the version that was updated in the pomfile
+        echo "The current version in the pom file is " + currentPom.getDependencyManagement().getDependencies().get(0).getVersion();
+    }
+}
