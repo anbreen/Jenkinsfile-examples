@@ -1,0 +1,42 @@
+#!groovy
+import java.util.regex.*
+
+node {
+
+    stage('Checkout current project's source control Repository'){
+        //This will checkout the repository in which the Jenkinsfile is checked in
+        checkout scm
+        // the variable env.BRANCH_NAME contains the checked-out branch
+        echo "This job will build the branch " + env.BRANCH_NAME
+    }
+
+    stage('Checkout another repository besides the current project's source control repository'){
+
+        //This will check out the "betting-game-server" repository in the root of the current project's source control repository
+        //git branch: "Checkout this branch name"", credentialsId: 'the id for the git', url: 'link to the git repository'
+
+        git branch: "branch-name-to-checkout", credentialsId: '**-**', url: 'https://github.com/anbreen/betting-game-server.git'
+        def checkedoutBranch = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+        echo "the checkedout branch is " + checkedoutBranch
+
+        //inorder to checkout the repository in a specific folder, following structure can be used.
+        dir('groovy'){
+            git branch: "branch-name-to-checkout", credentialsId: '**-**', url: 'https://github.com/anbreen/betting-game-server.git'
+            def checkedoutBranch = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+            echo "the checkedout branch is " + checkedoutBranch
+        }
+
+    }
+
+    stage('Commit & push to GIT using the Jenkinsfile'){
+
+        //This step will first configure the username & email and then continue to locally commit to the git repository and then in the end make a push to any branch of remote repository
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: '**-**',usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+             sh(script: 'git config --global user.email my.email@mycompany.com',returnStdout: true)
+             sh(script: 'git config --global user.name **-***',returnStdout: true)
+             sh(script: 'git add .', returnStdout: true)
+             sh(script: 'git commit -m "This is my first commit"', returnStdout: true)
+             sh(script: "git push https://$USERNAME:$PASSWORD@github.com/anbreen/betting-game-server.git 'localbranch-name-to-push':'remote-branch-name-to-push-to'", returnStdout: true)
+         }
+    }
+}
